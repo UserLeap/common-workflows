@@ -3,13 +3,6 @@ name: Create Tag and Make Release
 on:
   workflow_call:
     inputs:
-      platform:
-        required: true
-        type: string
-      rc:
-        required: false
-        type: string
-        default: false
       release_url:
         required: true
         type: string
@@ -30,52 +23,6 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Read old version
-        id: read_version
-        if: ${{ inputs.tag == 'false' }}
-        uses: madhead/read-java-properties@2.0.0
-        with:
-          file: './version.properties'
-          property: '${{ inputs.platform }}'
-
-      - name: Get release candidate version
-        env:
-          VERSION: ${{ steps.read_version.outputs.value }}
-        id: rc_version
-        if: ${{ inputs.rc == 'true' && inputs.tag == 'false' }}
-        run: |
-          git fetch --all --tags --quiet
-          # get the latest rc tag version
-          rcTags=$(git tag -l --sort=-version:refname "${{ inputs.platform }}/v${{ env.VERSION }}-rc*")
-          # if tag doesn't exist rc tag = rc1, otherwise increase the rc version
-          if [ "$rcTags" = "" ]
-          then
-            echo "value=-rc1" >> $GITHUB_OUTPUT
-          else
-            echo $(git tag -l --sort=-version:refname "${{ inputs.platform }}/v${{ env.VERSION }}-rc*" | head -n 1) > latestRCTag.out
-            latestRCTag=$(grep -o -E "rc[0-9]+" latestRCTag.out)
-            echo "latest rc version = $latestRCTag"
-            # output incremented rc tag version
-            echo "value=-rc$(($(echo $latestRCTag | grep -o -E '[0-9]+')+1))" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Check if tag exists
-        uses: mukunku/tag-exists-action@v1.2.0
-        if: ${{ inputs.tag == 'false' }}
-        env:
-          TAG:  ${{ inputs.platform }}/v${{ steps.read_version.outputs.value }}${{ steps.rc_version.outputs.value }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: check_tag
-        with:
-          tag: "${{ env.TAG }}"  
-      
-      - name: Create tag
-        if: ${{ inputs.tag == 'false' }}
-        env:
-          TAG:  ${{ inputs.platform }}/v${{ steps.read_version.outputs.value }}${{ steps.rc_version.outputs.value }}
-        if: ${{ steps.check_tag.outputs.exists != 'true' }}
-        run: bash ./scripts/tag-and-release.sh tag ${{ secrets.GH_TOKEN }} ${{ env.TAG }}
-      
       - name: Create tag with input
         if: ${{ inputs.tag != 'false' }}
         env:
