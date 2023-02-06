@@ -20,29 +20,33 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: get-npm-version
+        id: package-version
+        if: ${{ inputs.tag == 'false' }}
+        uses: martinbeentjes/npm-get-version-action@main
+
+      - name: Set tag
+        id: set-tag
+        run: echo "VERSION_TAG=v${{ inputs.tag == 'false' && steps.package-version.outputs.current-version || inputs.tag }}" >> $GITHUB_OUTPUT
+
       - name: Check if tag exists
         uses: mukunku/tag-exists-action@v1.2.0
         env:
-          TAG:  v${{ inputs.tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: check_tag
         with:
-          tag: "${{ env.TAG }}"  
+          tag: "${{ steps.set-tag.outputs.VERSION_TAG }}"  
 
       - name: Create tag with input
-        if: ${{ inputs.tag != 'false' && steps.check_tag.outputs.exists != 'true' }}
+        if: ${{ steps.check_tag.outputs.exists != 'true' }}
         uses: UserLeap/common-workflows/.github/actions/tag@main
-        env:
-          TAG:  v${{ inputs.tag }}
         with:
-          tag: '${{ env.TAG }}'
+          tag: '${{ steps.set-tag.outputs.VERSION_TAG }}'
 
       - name: Create release
-        env:
-          TAG:  v${{ inputs.tag }}
         if: ${{ steps.check_tag.outputs.exists != 'true' }}
         uses: UserLeap/common-workflows/.github/actions/release@main
         with:
-          tag: '${{ env.TAG }}'
+          tag: '${{ steps.set-tag.outputs.VERSION_TAG }}'
           release_url: '${{ inputs.release_url }}'
           token: '${{ secrets.GITHUB_TOKEN }}'
