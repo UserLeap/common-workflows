@@ -20,14 +20,23 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create tag with input
-        if: ${{ inputs.tag != 'false' }}
+      - name: Check if tag exists
+        uses: mukunku/tag-exists-action@v1.2.0
         env:
           TAG:  v${{ inputs.tag }}
-        run: bash ./scripts/tag-and-release.sh tag ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: check_tag
+        with:
+          tag: "${{ env.TAG }}"  
+
+      - name: Create tag with input
+        if: ${{ inputs.tag != 'false' && steps.check_tag.outputs.exists != 'true' }}
+        env:
+          TAG:  v${{ inputs.tag }}
+        run: bash /home/runner/work/common-workflows/common-workflows/scripts/tag-and-release.sh tag ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }}
 
       - name: Create release
         env:
-          TAG:  ${{ inputs.platform }}/v${{ steps.read_version.outputs.value }}
-        if: ${{ steps.check_tag.outputs.exists != 'true' && inputs.rc != 'true' }}
-        run: bash ./scripts/tag-and-release.sh release ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }} ${{ inputs.release_url }}
+          TAG:  v${{ inputs.tag }}
+        if: ${{ steps.check_tag.outputs.exists != 'true' }}
+        run: bash /home/runner/work/common-workflows/common-workflows/scripts/tag-and-release.sh release ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }} ${{ inputs.release_url }}
