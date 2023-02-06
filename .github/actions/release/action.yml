@@ -1,0 +1,22 @@
+name: 'Release'
+description: 'Greet someone'
+inputs:
+  tag:
+    required: true
+    type: string
+    default: false
+  release_url:
+    required: true
+    type: string
+    default: false
+  token:
+    required: true
+    type: string
+    default: false
+runs:
+  using: "composite"
+  steps:
+    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+      shell: bash
+    - run: release.sh ${{ inputs.token }} ${{ inputs.tag }} ${{ inputs.release_url }}
+      shell: bash

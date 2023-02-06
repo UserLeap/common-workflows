@@ -31,12 +31,18 @@ jobs:
 
       - name: Create tag with input
         if: ${{ inputs.tag != 'false' && steps.check_tag.outputs.exists != 'true' }}
+        uses: UserLeap/common-workflows/.github/actions/tag@main
         env:
           TAG:  v${{ inputs.tag }}
-        run: bash /home/runner/work/common-workflows/common-workflows/scripts/tag-and-release.sh tag ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }}
+        with:
+          tag: '${{ env.TAG }}'
 
       - name: Create release
         env:
           TAG:  v${{ inputs.tag }}
         if: ${{ steps.check_tag.outputs.exists != 'true' }}
-        run: bash /home/runner/work/common-workflows/common-workflows/scripts/tag-and-release.sh release ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }} ${{ inputs.release_url }}
+        uses: UserLeap/common-workflows/.github/actions/release@main
+        with:
+          tag: '${{ env.TAG }}'
+          release_url: '${{ inputs.release_url }}'
+          token: '${{ secrets.GITHUB_TOKEN }}'
