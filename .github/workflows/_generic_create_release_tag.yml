@@ -10,9 +10,6 @@ on:
         required: false
         type: string
         default: false
-    secrets:
-      GH_TOKEN:
-        required: true
 
 jobs:
   create-release-tag:
@@ -21,16 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag with input
         if: ${{ inputs.tag != 'false' }}
         env:
           TAG:  v${{ inputs.tag }}
-        run: bash ./scripts/tag-and-release.sh tag ${{ secrets.GH_TOKEN }} ${{ env.TAG }}
+        run: bash ./scripts/tag-and-release.sh tag ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }}
 
       - name: Create release
         env:
           TAG:  ${{ inputs.platform }}/v${{ steps.read_version.outputs.value }}
         if: ${{ steps.check_tag.outputs.exists != 'true' && inputs.rc != 'true' }}
-        run: bash ./scripts/tag-and-release.sh release ${{ secrets.GH_TOKEN }} ${{ env.TAG }} ${{ inputs.release_url }}
+        run: bash ./scripts/tag-and-release.sh release ${{ secrets.GITHUB_TOKEN }} ${{ env.TAG }} ${{ inputs.release_url }}
