@@ -25,9 +25,14 @@ jobs:
         if: ${{ inputs.tag == 'false' }}
         uses: martinbeentjes/npm-get-version-action@main
 
+      - name: Set version string
+        id: set-version
+        if: ${{ inputs.tag == 'false' }}
+        run: echo "VERSION=v${{ steps.package-version.outputs.current-version }}" >> $GITHUB_OUTPUT
+
       - name: Set tag
         id: set-tag
-        run: echo "VERSION_TAG=v${{ inputs.tag == 'false' && steps.package-version.outputs.current-version || inputs.tag }}" >> $GITHUB_OUTPUT
+        run: echo "VERSION_TAG=${{ inputs.tag == 'false' && steps.set-version.outputs.VERSION || inputs.tag }}" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         uses: mukunku/tag-exists-action@v1.2.0
