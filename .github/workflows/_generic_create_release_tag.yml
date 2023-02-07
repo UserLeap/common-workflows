@@ -14,12 +14,16 @@ on:
       new-tag:
         description: "Whether a new tag was actually created"
         value: ${{ jobs.create-release-tag.outputs.new-tag }}
+      tag:
+        description: "The tag created"
+        value: ${{ jobs.create-release-tag.outputs.tag }}
 
 jobs:
   create-release-tag:
     runs-on: ubuntu-latest
     outputs:
       new-tag: ${{ steps.check_tag.outputs.exists != 'true' }}
+      tag: ${{ steps.set-tag.outputs.VERSION_TAG }}
     steps:
       - uses: actions/checkout@v3
         with:
