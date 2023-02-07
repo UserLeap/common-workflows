@@ -10,6 +10,8 @@ on:
         required: false
         type: string
         default: false
+    outputs:
+      new-tag: ${{ jobs.create-release-tag.outputs.new-tag }}
 
 jobs:
   create-release-tag:
